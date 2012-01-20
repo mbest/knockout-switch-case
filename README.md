@@ -1,6 +1,6 @@
 **SWITCH/CASE** bindings for [Knockout](http://knockoutjs.com/)
 
-*Knockout* includes only the `if` and `ifnot` bindings for control flow. The `switch` and `case` bindings provide a flexible and poweful control flow mechanism that can simplify your code.
+*Knockout* includes only the `if` and `ifnot` bindings for control flow. The `switch` and `case` bindings provide a flexible and powerful control flow mechanism that can simplify your code.
 
 Let's start with some examples. Here we want to display a different message based on a status value:
 

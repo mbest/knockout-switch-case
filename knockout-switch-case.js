@@ -95,7 +95,7 @@ ko.bindingHandlers['case'] = {
         return ko.bindingHandlers['template']['init'](element, function(){ return {}; });
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        var self = self = ko.bindingHandlers['case'];
+        var self = ko.bindingHandlers['case'];
         // call template update() with calculated value for 'if'
         return ko.bindingHandlers['template']['update'](element, 
             self.makeTemplateValueAccessor(self.checkCase(valueAccessor, bindingContext)), 
