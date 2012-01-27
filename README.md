@@ -21,7 +21,7 @@ Let's start with some examples. Here we want to display a different message base
 </div>
 ```
 
-Here's a similar example using source data values:
+Here's an equivalent example using source data values:
 
 ```html
 <div data-bind="switch: true">
@@ -30,6 +30,9 @@ Here's a similar example using source data values:
     </div>
     <div data-bind="case: isReady">
         Your order is being processed. Please be patient.
+    </div>
+    <div data-bind="casenot: isComplete">
+        Your order could not be processed. Please go back and complete the missing data.
     </div>
     <div data-bind="case: $else">
         Your order could not be processed. Please go back and complete the missing data.
@@ -45,7 +48,9 @@ A *switch* block can contain any number of *case* blocks. No more than one *case
 1. If the *case* value is an array, the block will be used if the *switch* value matches (strict) an item in the array.
 1. Otherwise, the block will be used if the *case* value matches the *switch* value (loose comparison).
 
-Here are some more examples. This example demonstrates items 1, 3, 4, and 5 above and uses container-less bindings (only supported if the debug version of Knockout is used):
+If you want a block to be used based on the parameter not matching, you can use the `casenot` binding. This works similarly to `case`, except that the result of the value matching is reversed.
+
+Here are some more examples. This example demonstrates items 1, 3, 4, and 5 above and uses container-less bindings:
 
 ```html
 <!-- ko switch: somevalue -->
@@ -67,7 +72,7 @@ Here are some more examples. This example demonstrates items 1, 3, 4, and 5 abov
 <!-- /ko -->
 ```
 
-This example demonstrates item 2 (also see the second example above): 
+This example demonstrates item 2 (also see the second example above):
 
 ```html
 <!-- ko switch: isReady -->

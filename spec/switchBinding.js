@@ -66,7 +66,7 @@ describe('Binding: Switch/Case', {
         ko.applyBindings({ somevalue: value }, testNode);
         // initially matches no value
         value_of(testNode).should_contain_text("xxx");
-        // change value so it matches second case 
+        // change value so it matches second case
         value(3);
         value_of(testNode).should_contain_text("xxxValue is 2 or 3");
     },
@@ -77,7 +77,7 @@ describe('Binding: Switch/Case', {
         ko.applyBindings({ somevalue: value }, testNode);
         // initially matches second case
         value_of(testNode).should_contain_text("xxxValue is less than 5");
-        // change value so it matches first case 
+        // change value so it matches first case
         value(1);
         value_of(testNode).should_contain_text("xxxValue is 1");
     },
@@ -95,9 +95,9 @@ describe('Binding: Switch/Case', {
         value(1);
         value_of(testNode).should_contain_text("xxxSomevalue is true");
     },
-    
+
     'Should support nested switch/case': function() {
-        testNode.innerHTML = 
+        testNode.innerHTML =
             "<div data-bind='switch: 1'>"+
                 "<div data-bind='case: 1'>"+
                     "<div data-bind='switch: \"you\"'>"+
@@ -123,6 +123,17 @@ describe('Binding: Switch/Case', {
         testNode.innerHTML = "xxx<!-- ko switch: false --><!-- ko case: 'abc' -->Value matched<!-- /ko --><!-- ko case: $else -->Value didn't match<!-- /ko --><!-- /ko -->";
         ko.applyBindings({}, testNode);
         value_of(testNode).should_contain_text("xxxValue didn't match");
+    },
+
+    'casenot should work the reverse of case': function() {
+        testNode.innerHTML = "<div data-bind='switch: somevalue'><div data-bind='casenot: 1'>Value is not 1</div><div data-bind='casenot: 2'>Value is not 2</div></div>";
+        var value = ko.observable(1);
+        ko.applyBindings({ somevalue: value }, testNode);
+        // initially matches case 2
+        value_of(testNode).should_contain_text("Value is not 2");
+        // change value so it matches case 1
+        value(2);
+        value_of(testNode).should_contain_text("Value is not 1");
     },
 
     'Bindings in containerless switch in templates should be bound only once': function() {
