@@ -123,7 +123,7 @@ JSSpec.Executor.prototype.run = function() {
 					result = self.target();
 					self.onSuccess(self, result);
 				} catch(ex) {
-					if(JSSpec.Browser.Webkit) ex = {message:ex.message, fileName:ex.sourceURL, lineNumber:ex.line};
+					if(JSSpec.Browser.Webkit) ex = {message:ex.message, fileName:ex.sourceURL, lineNumber:ex.line, stack:ex.stack};
 					
 					if(JSSpec._secondPass)  {
 						ex = self.mergeExceptions(JSSpec._assertionFailure, ex);
@@ -614,7 +614,14 @@ JSSpec.Logger.prototype.onExampleEnd = function(example) {
 	
 	if(example.exception) {
 		var div = document.createElement("DIV");
-		div.innerHTML = example.exception.message + "<p><br />" + " at " + example.exception.fileName + ", line " + example.exception.lineNumber + "</p>";
+		if (example.exception.fileName) {
+			div.innerHTML = example.exception.message + "<p><br />" + " at " + example.exception.fileName + ", line " + example.exception.lineNumber + "</p>";
+		} else if (example.exception.stack) {
+			div.style.whiteSpace="pre-wrap";
+			div.innerText = example.exception.stack;
+		} else {
+			div.innerText = example.exception.message;
+		}
 		li.appendChild(div);
 	}
 	

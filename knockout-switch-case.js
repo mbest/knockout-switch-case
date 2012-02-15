@@ -35,6 +35,7 @@ if (ko.virtualElements.firstChild) {
             endCommentNode = element.nextSibling, parent = element.parentNode;
         for (var i = 0, j = nodesArray.length; i < j; i++)
             parent.insertBefore(nodesArray[i], endCommentNode);
+        return nodesArray;
     };
     bindSwitchNodes = function(element, bindingContext, switchBindings, nodesArray) {
         // node loop logic copied from src/templating.js
@@ -56,7 +57,7 @@ if (ko.virtualElements.firstChild) {
 ko.bindingHandlers['switch'] = {
     'flags': ko.bindingFlags.contentBind | ko.bindingFlags.canUseVirtual,
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        var nodesArray = initSwitchNodes();
+        var nodesArray = initSwitchNodes(element);
         var value = ko.utils.unwrapObservable(valueAccessor()),
             switchSkipNextArray = [],
             switchBindings = {
