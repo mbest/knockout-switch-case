@@ -1,4 +1,4 @@
-**SWITCH/CASE** bindings for [Knockout](http://knockoutjs.com/)
+### **SWITCH/CASE** bindings for [Knockout](http://knockoutjs.com/)
 
 *Knockout* includes only the `if` and `ifnot` bindings for control flow. The `switch` and `case` bindings provide a flexible and powerful control flow mechanism that can simplify your code.
 
@@ -81,8 +81,19 @@ This example demonstrates item 2 (also see the second example above):
 <!-- /ko -->
 ```
 
+### Extending `switch/case` to control other UI aspects
+
+`ko.bindingHandlers.switch.makeCaseHandler` can be used to create new bindings that control any UI aspect. It returns a new binding handler object that you should assign to a `ko.bindingHandlers` property. It takes three parameters:
+
+* `binding` This is the name of the binding to wrap (`case` wraps the `template` binding, for example).
+* `isNot` (optional) If set to *true*, the new binding will reverse the result of the value matching (like `casenot`).
+* `makeValueAccessor` (optional) If the wrapped binding needs the value specified in a certain format, you can provide a function that accepts a `value` parameter and returns a `valueAccessor` function. The default looks like this:
+`function (value) { return function() { return value } }`
+
+Included with the plugin are `case.visible` and `case.hidden` bindings, which wrap the `visible` binding (directly and reversed, respectively).
+
 If you have any questions, feel free to contact me:
 
-Michael Best
-https://github.com/mbest/
+Michael Best<br>
+https://github.com/mbest/<br>
 mbest@dasya.com

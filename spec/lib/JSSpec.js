@@ -620,7 +620,7 @@ JSSpec.Logger.prototype.onExampleEnd = function(example) {
 			div.style.whiteSpace="pre-wrap";
 			div.innerText = example.exception.stack;
 		} else {
-			div.innerText = example.exception.message;
+			div.innerHTML = example.exception.message;
 		}
 		li.appendChild(div);
 	}

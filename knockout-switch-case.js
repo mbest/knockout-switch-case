@@ -106,19 +106,28 @@ function makeTemplateValueAccessor(ifValue) {
     return function() { return { 'if': ifValue, 'templateEngine': ko.nativeTemplateEngine.instance } };
 }
 
-function makeCaseHandler(checkFunction) {
+function makeOtherValueAccessor(ifValue) {
+    return function() { return ifValue };
+}
+
+function makeCaseHandler(binding, isNot, makeValueAccessor) {
+    var checkFunction = isNot ? checkNotCase : checkCase;
+    binding = binding || 'template';
+    makeValueAccessor = makeValueAccessor || (binding == 'template' ?  makeTemplateValueAccessor : makeOtherValueAccessor);
+
     return {
-    'flags': ko.bindingFlags.contentBind | ko.bindingFlags.canUseVirtual,
+    'flags': ko.bindingHandlers[binding]['flags'] ^ ko.bindingFlags.contentSet,
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         if (!bindingContext.$switchSkipNextArray)
-            throw "case binding must only be used with a switch binding";
+            throw Error("case binding must only be used with a switch binding");
         if (bindingContext.$switchIndex !== undefined)
-            throw "case binding cannot be nested";
+            throw Error("case binding cannot be nested");
         // initialize $switchIndex and push a new observable to $switchSkipNextArray
         bindingContext.$switchIndex = bindingContext.$switchSkipNextArray.length;
         bindingContext.$switchSkipNextArray.push(ko.observable(false));
-        // call template init() to initialize template
-        return ko.bindingHandlers['template']['init'](element, function(){ return {}; });
+        // call init()
+        if (ko.bindingHandlers[binding]['init'])
+            return ko.bindingHandlers[binding]['init'](element, function(){ return {}; });
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var index = bindingContext.$switchIndex, result, skipNext;
@@ -131,19 +140,24 @@ function makeCaseHandler(checkFunction) {
             skipNext = result = checkFunction(valueAccessor, bindingContext);
         }
         // call template update() with calculated value for 'if'
-        ko.bindingHandlers['template']['update'](element,
-            makeTemplateValueAccessor(result), allBindingsAccessor, viewModel, bindingContext);
+        ko.bindingHandlers[binding]['update'](element,
+            makeValueAccessor(result), allBindingsAccessor, viewModel, bindingContext);
         bindingContext.$switchSkipNextArray[index](skipNext);
     }
     };
 }
 
-ko.bindingHandlers['case'] = makeCaseHandler(checkCase);
+ko.bindingHandlers['case'] = makeCaseHandler('template');
 ko.bindingRewriteValidators['case'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['case'] = true;
 
-ko.bindingHandlers['casenot'] = makeCaseHandler(checkNotCase);
+ko.bindingHandlers['casenot'] = makeCaseHandler('template', true);
 ko.bindingRewriteValidators['casenot'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['casenot'] = true;
+
+ko.bindingHandlers['case.visible'] = makeCaseHandler('visible');
+ko.bindingHandlers['case.hidden'] = makeCaseHandler('visible', true);
+
+ko.bindingHandlers['switch']['makeCaseHandler'] = makeCaseHandler;
 
 })();

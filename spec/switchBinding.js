@@ -32,6 +32,33 @@ describe('Binding: Switch/Case', {
         value_of(testNode).should_contain_text("Value is 2");
     },
 
+    'Should be able to show and hide elements using \'case.visible\'': function() {
+        testNode.innerHTML = "<!--ko switch: somevalue--><div data-bind='case.visible: 1'>Value is 1</div><div data-bind='case.visible: 2'>Value is 2</div><!--/ko-->";
+        var value = ko.observable(1);
+        ko.applyBindings({ somevalue: value }, testNode);
+        // initially matches case 1
+        value_of(testNode.childNodes[1].style.display).should_be("");
+        value_of(testNode.childNodes[2].style.display).should_be("none");
+        // change value so it matches case 2
+        value(2);
+        value_of(testNode.childNodes[1].style.display).should_be("none");
+        value_of(testNode.childNodes[2].style.display).should_be("");
+    },
+
+    'Should be able to show and hide elements using \'case.hidden\'': function() {
+        testNode.innerHTML = "<!--ko switch: somevalue--><div data-bind='case.hidden: 1'>Value is 1</div><div data-bind='case.hidden: 2'>Value is 2</div><!--/ko-->";
+        var value = ko.observable(1);
+        ko.applyBindings({ somevalue: value }, testNode);
+        // initially matches case 1
+        value_of(testNode.childNodes[1].style.display).should_be("none");
+        value_of(testNode.childNodes[2].style.display).should_be("");
+        
+        // change value so it matches case 2
+        value(2);
+        value_of(testNode.childNodes[1].style.display).should_be("");
+        value_of(testNode.childNodes[2].style.display).should_be("none");
+    },
+
     'Should display only matching case block with observable switch and case value': function() {
         testNode.innerHTML = "xxx<!-- ko switch: somevalue --><!-- ko case: case1 -->Value is 1<!-- /ko --><!-- ko case: case2 -->Value is 2<!-- /ko --><!-- /ko -->";
         var value = ko.observable('us'), case1 = ko.observable('you'), case2 = ko.observable('them');
