@@ -45,8 +45,8 @@ describe('Binding: Switch/Case', {
         value_of(testNode.childNodes[2].style.display).should_be("");
     },
 
-    'Should be able to show and hide elements using \'case.hidden\'': function() {
-        testNode.innerHTML = "<!--ko switch: somevalue--><div data-bind='case.hidden: 1'>Value is 1</div><div data-bind='case.hidden: 2'>Value is 2</div><!--/ko-->";
+    'Should be able to show and hide elements using \'casenot.visible\'': function() {
+        testNode.innerHTML = "<!--ko switch: somevalue--><div data-bind='casenot.visible: 1'>Value is 1</div><div data-bind='casenot.visible: 2'>Value is 2</div><!--/ko-->";
         var value = ko.observable(1);
         ko.applyBindings({ somevalue: value }, testNode);
         // initially matches case 1
