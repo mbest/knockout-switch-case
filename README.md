@@ -90,7 +90,7 @@ This example demonstrates item 2 (also see the second example above):
 * `makeValueAccessor` (optional) If the wrapped binding needs the value specified in a certain format, you can provide a function that accepts a `value` parameter and returns a `valueAccessor` function. The default looks like this:
 `function (value) { return function() { return value } }`
 
-Included with the plugin are `case.visible` and `case.hidden` bindings, which wrap the `visible` binding (directly and reversed, respectively).
+Included with the plugin are `case.visible` and `casenot.visible` bindings, which wrap the `visible` binding (directly and reversed, respectively).
 
 If you have any questions, feel free to contact me:
 

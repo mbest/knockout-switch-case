@@ -156,7 +156,7 @@ ko.bindingRewriteValidators['casenot'] = false; // Can't rewrite control flow bi
 ko.virtualElements.allowedBindings['casenot'] = true;
 
 ko.bindingHandlers['case.visible'] = makeCaseHandler('visible');
-ko.bindingHandlers['case.hidden'] = makeCaseHandler('visible', true);
+ko.bindingHandlers['casenot.visible'] = makeCaseHandler('visible', true);
 
 ko.bindingHandlers['switch']['makeCaseHandler'] = makeCaseHandler;
 
