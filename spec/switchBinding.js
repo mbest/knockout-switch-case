@@ -33,30 +33,30 @@ describe('Binding: Switch/Case', {
     },
 
     'Should be able to show and hide elements using \'case.visible\'': function() {
-        testNode.innerHTML = "<!--ko switch: somevalue--><div data-bind='case.visible: 1'>Value is 1</div><div data-bind='case.visible: 2'>Value is 2</div><!--/ko-->";
+        testNode.innerHTML = "xxx<!--ko switch: somevalue--><div data-bind='case.visible: 1'>Value is 1</div><div data-bind='case.visible: 2'>Value is 2</div><!--/ko-->";
         var value = ko.observable(1);
         ko.applyBindings({ somevalue: value }, testNode);
         // initially matches case 1
-        value_of(testNode.childNodes[1].style.display).should_be("");
-        value_of(testNode.childNodes[2].style.display).should_be("none");
+        value_of(testNode.childNodes[2].style.display).should_be("");
+        value_of(testNode.childNodes[3].style.display).should_be("none");
         // change value so it matches case 2
         value(2);
-        value_of(testNode.childNodes[1].style.display).should_be("none");
-        value_of(testNode.childNodes[2].style.display).should_be("");
+        value_of(testNode.childNodes[2].style.display).should_be("none");
+        value_of(testNode.childNodes[3].style.display).should_be("");
     },
 
     'Should be able to show and hide elements using \'casenot.visible\'': function() {
-        testNode.innerHTML = "<!--ko switch: somevalue--><div data-bind='casenot.visible: 1'>Value is 1</div><div data-bind='casenot.visible: 2'>Value is 2</div><!--/ko-->";
+        testNode.innerHTML = "xxx<!--ko switch: somevalue--><div data-bind='casenot.visible: 1'>Value is 1</div><div data-bind='casenot.visible: 2'>Value is 2</div><!--/ko-->";
         var value = ko.observable(1);
         ko.applyBindings({ somevalue: value }, testNode);
         // initially matches case 1
-        value_of(testNode.childNodes[1].style.display).should_be("none");
-        value_of(testNode.childNodes[2].style.display).should_be("");
+        value_of(testNode.childNodes[2].style.display).should_be("none");
+        value_of(testNode.childNodes[3].style.display).should_be("");
         
         // change value so it matches case 2
         value(2);
-        value_of(testNode.childNodes[1].style.display).should_be("");
-        value_of(testNode.childNodes[2].style.display).should_be("none");
+        value_of(testNode.childNodes[2].style.display).should_be("");
+        value_of(testNode.childNodes[3].style.display).should_be("none");
     },
 
     'Should display only matching case block with observable switch and case value': function() {
