@@ -42,7 +42,7 @@ Here's an equivalent example using source data values:
 
 A *switch* block can contain any number of *case* blocks. No more than one *case* block will be used. The contents of the remaining blocks will be cleared. Both `switch` and `case` take a single parameter. In most cases the values of the two parameters are matched against each other to determine which case block to use. The first block (top-down) to match is used; subsequent blocks are cleared. Here, in detail, is how the values are matched:
 
-1. If the *case* value is the special value `$else` or `$default`, the block is used (if no previous blocks were used).
+1. If the *case* value is the special value `$else` or `$default`, the block is used if no non-default blocks were used. There can be multiple blocks with `$else` or `$default` and they can be in any order.
 1. If the *switch* value is boolean (`true` or `false`), each *case* value's "truthiness" is matched against the *switch* value.
 1. If the *case* value is boolean (and the *switch* value is not boolean), the *case* value is used as is. The special variable `$value` can be used in a *case* expression to refer to the *switch* value. The block will be used if the expression is true.
 1. If the *case* value is an array, the block will be used if the *switch* value matches (strict) an item in the array.
@@ -54,6 +54,9 @@ Here are some more examples. This example demonstrates items 1, 3, 4, and 5 abov
 
 ```html
 <!-- ko switch: somevalue -->
+<!-- ko case: $default -->
+    Value doesn't match
+<!-- /ko -->
 <!-- ko case: 'foo' -->
     Value is foo
 <!-- /ko -->
@@ -65,9 +68,6 @@ Here are some more examples. This example demonstrates items 1, 3, 4, and 5 abov
 <!-- /ko -->
 <!-- ko case: $value.length == 3 -->
     Value is a three-letter word
-<!-- /ko -->
-<!-- ko case: $default -->
-    Value doesn't match
 <!-- /ko -->
 <!-- /ko -->
 ```
