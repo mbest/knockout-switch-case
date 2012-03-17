@@ -64,6 +64,7 @@ ko.bindingHandlers['switch'] = {
                 $switchIndex: undefined,
                 $switchSkipNextArray: switchSkipNextArray,
                 $switchValueAccessor: valueAccessor,
+                $switchDefault: ko.observable(true),
                 '$default': defaultvalue,
                 '$else': defaultvalue,
                 '$value': value
@@ -77,17 +78,12 @@ ko.bindingHandlers['switch'] = {
 ko.bindingRewriteValidators['switch'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['switch'] = true;
 
-function checkCase(valueAccessor, bindingContext) {
+function checkCase(value, bindingContext) {
     // Check value and determine result:
-    //  If value is the special object $else, the result is always true (should always be the last case)
     //  If the control value is boolean, the result is the matching truthiness of the value
     //  If value is boolean, the result is the value (allows expressions instead of just simple matching)
     //  If value is an array, the result is true if the control value matches (strict) an item in the array
     //  Otherwise, the result is true if value matches the control value (loose)
-    var value = ko.utils.unwrapObservable(valueAccessor());
-    if (value === bindingContext['$else']) {
-        return true;
-    }
     var switchValue = ko.utils.unwrapObservable(bindingContext.$switchValueAccessor());
     return (typeof switchValue == 'boolean')
         ? (value ? switchValue : !switchValue)
@@ -98,8 +94,8 @@ function checkCase(valueAccessor, bindingContext) {
                 : (value == switchValue);
 }
 
-function checkNotCase(valueAccessor, bindingContext) {
-    return !checkCase(valueAccessor, bindingContext);
+function checkNotCase(value, bindingContext) {
+    return !checkCase(value, bindingContext);
 }
 
 function makeTemplateValueAccessor(ifValue) {
@@ -130,19 +126,32 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
             return ko.bindingHandlers[binding]['init'](element, function(){ return {}; });
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        var index = bindingContext.$switchIndex, result, skipNext;
+        var index = bindingContext.$switchIndex, 
+            isLast = (index === bindingContext.$switchSkipNextArray.length - 1),
+            result, skipNext, noDefault;
         if (index && bindingContext.$switchSkipNextArray[index-1]()) {
             // an earlier case binding matched; so skip this one (and subsequent ones)
             result = false;
             skipNext = true;
         } else {
-            // if result is true, will skip the subsequent cases
-            skipNext = result = checkFunction(valueAccessor, bindingContext);
+            var value = ko.utils.unwrapObservable(valueAccessor());
+            if (value === bindingContext['$else']) {
+                //  If value is the special object $else, the result depends on the other case values
+                result = bindingContext.$switchDefault() || isLast;
+                skipNext = false;
+            } else {
+                // if result is true, will skip the subsequent cases (and any default cases)
+                noDefault = skipNext = result = checkFunction(value, bindingContext);
+            }
         }
         // call template update() with calculated value for 'if'
         ko.bindingHandlers[binding]['update'](element,
             makeValueAccessor(result), allBindingsAccessor, viewModel, bindingContext);
         bindingContext.$switchSkipNextArray[index](skipNext);
+        if (noDefault)
+            bindingContext.$switchDefault(false);
+        else if (!skipNext && isLast)
+            bindingContext.$switchDefault(true);
     }
     };
 }

@@ -76,8 +76,8 @@ describe('Binding: Switch/Case', {
         value_of(testNode).should_contain_text("xxxValue is 1");
     },
 
-    'Should display only matching case block with default case (using $default)': function() {
-        testNode.innerHTML = "xxx<!-- ko switch: somevalue --><!-- ko case: 1 -->Value is 1<!-- /ko --><!-- ko case: $default -->Default case<!-- /ko --><!-- /ko -->";
+    'Should display only matching case block with default case (using $default as first case)': function() {
+        testNode.innerHTML = "xxx<!-- ko switch: somevalue --><!-- ko case: $default -->Default case<!-- /ko --><!-- ko case: 1 -->Value is 1<!-- /ko --><!-- /ko -->";
         var value = ko.observable(0);
         ko.applyBindings({ somevalue: value }, testNode);
         // initially matches default value
@@ -121,6 +121,29 @@ describe('Binding: Switch/Case', {
         // change value so it's true
         value(1);
         value_of(testNode).should_contain_text("xxxSomevalue is true");
+    },
+
+    'Should match all default cases if none others match and no default cases if there\'s a match': function() {
+        testNode.innerHTML = "xxx<!--ko switch: somevalue-->"+
+                "<!--ko case: $default-->default 1<!--/ko-->"+
+                "<!--ko case: 1-->matches 1<!--/ko-->"+
+                "<!--ko case: $default-->default 2<!--/ko-->"+
+                "<!--ko case: 2-->matches 2<!--/ko-->"+
+                "<!--ko case: $default-->default 3<!--/ko-->"+
+            "<!--/ko-->";
+        var value = ko.observable(0);
+        ko.applyBindings({ somevalue: value }, testNode);
+        // initially matches no value
+        value_of(testNode).should_contain_text("xxxdefault 1default 2default 3");
+        // change value so it matches first case
+        value(1);
+        value_of(testNode).should_contain_text("xxxmatches 1");
+        // change value so it matches second case
+        value(2);
+        value_of(testNode).should_contain_text("xxxmatches 2");
+        // change value so it matches no cases
+        value(3);
+        value_of(testNode).should_contain_text("xxxdefault 1default 2default 3");
     },
 
     'Should support nested switch/case': function() {
