@@ -69,8 +69,8 @@ ko.bindingHandlers['switch'] = {
                 '$else': defaultvalue,
                 '$value': value
             };
-        // Each child element gets a new binding context so it has it's own $switchIndex property.
-        // The other properties are shared since they're objects.
+        // Each child element gets a new binding context so it can have it's own $switchIndex property.
+        // The other properties will be shared since they're objects.
         bindSwitchNodes(element, bindingContext, switchBindings, nodesArray);
         return { 'controlsDescendantBindings': true };
     }
@@ -112,42 +112,55 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
     makeValueAccessor = makeValueAccessor || (binding == 'template' ?  makeTemplateValueAccessor : makeOtherValueAccessor);
 
     return {
+    // Inherit flags from the binding we're wrapping (but we don't want the contentSet from template)
     'flags': ko.bindingHandlers[binding]['flags'] ^ ko.bindingFlags.contentSet,
+
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         if (!bindingContext.$switchSkipNextArray)
             throw Error("case binding must only be used with a switch binding");
         if (bindingContext.$switchIndex !== undefined)
             throw Error("case binding cannot be nested");
-        // initialize $switchIndex and push a new observable to $switchSkipNextArray
-        bindingContext.$switchIndex = bindingContext.$switchSkipNextArray.length;
-        bindingContext.$switchSkipNextArray.push(ko.observable(false));
-        // call init()
+        // Initialize $switchIndex and push a new observable to $switchSkipNextArray
+        bindingContext.$switchIndex = bindingContext.$switchSkipNextArray.push(ko.observable(false)) - 1;
+        // Call init()
         if (ko.bindingHandlers[binding]['init'])
             return ko.bindingHandlers[binding]['init'](element, function(){ return {}; });
     },
+
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var index = bindingContext.$switchIndex, 
             isLast = (index === bindingContext.$switchSkipNextArray.length - 1),
             result, skipNext, noDefault;
+
         if (index && bindingContext.$switchSkipNextArray[index-1]()) {
-            // an earlier case binding matched; so skip this one (and subsequent ones)
+            // An earlier case binding matched: skip this one (and subsequent ones)
             result = false;
             skipNext = true;
         } else {
             var value = ko.utils.unwrapObservable(valueAccessor());
             if (value === bindingContext['$else']) {
-                //  If value is the special object $else, the result depends on the other case values
+                // If value is the special object $else, the result depends on the other case values.
+                // If we're the last *case* item, the value must be true. $switchDefault will get 
+                // updated to *true* below, but that won't necessarily update us because it would
+                // require a recursive update.
                 result = bindingContext.$switchDefault() || isLast;
                 skipNext = false;
             } else {
-                // if result is true, will skip the subsequent cases (and any default cases)
+                // If result is true, we will skip the subsequent cases (and any default cases)
                 noDefault = skipNext = result = checkFunction(value, bindingContext);
             }
         }
-        // call template update() with calculated value for 'if'
+        // Call template update() with calculated value for 'if'
         ko.bindingHandlers[binding]['update'](element,
             makeValueAccessor(result), allBindingsAccessor, viewModel, bindingContext);
+
+        // Update the observable "skip next" value; if the value is changed, this will update the 
+        // subsequent case item.
         bindingContext.$switchSkipNextArray[index](skipNext);
+
+        // Update $switchDefault to false if a non-default case item has matched.
+        // Update it to true if we're the last item and none of items have matched.
+        // (Initially, every item will be the last, but it doesn't matter.) 
         if (noDefault)
             bindingContext.$switchDefault(false);
         else if (!skipNext && isLast)
