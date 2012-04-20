@@ -1,3 +1,7 @@
+// SWITCH/CASE binding for Knockout http://knockoutjs.com/
+// (c) Michael Best
+// License: MIT (http://www.opensource.org/licenses/mit-license.php)
+
 (function() {
 // If used with the non-debug version, ko.virtualElements isn't exported
 if (!ko.virtualElements)

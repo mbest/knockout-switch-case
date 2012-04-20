@@ -92,8 +92,8 @@ This example demonstrates item 2 (also see the second example above):
 
 Included with the plugin are `case.visible` and `casenot.visible` bindings, which wrap the `visible` binding (directly and reversed, respectively).
 
-If you have any questions, feel free to contact me:
+License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
 Michael Best<br>
-https://github.com/mbest/<br>
+https://github.com/mbest<br>
 mbest@dasya.com
