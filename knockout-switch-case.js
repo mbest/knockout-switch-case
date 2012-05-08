@@ -15,6 +15,7 @@ if (!ko.bindingFlags)
 
 var defaultvalue = {}, initSwitchNodes, bindSwitchNodes;
 if (ko.virtualElements.firstChild) {
+    // Code for Knockout 2.1+
     initSwitchNodes = function() {};
     bindSwitchNodes = function(element, bindingContext, switchBindings) {
         var node, nextInQueue = ko.virtualElements.firstChild(element);
@@ -29,17 +30,19 @@ if (ko.virtualElements.firstChild) {
         }
     };
 } else {
+    // Code for Knockout 2.0
     initSwitchNodes = function(element) {
-        // template.init extracts the child elements into an anonymousTemplate
-        ko.bindingHandlers['template']['init'](element, function(){ return {}; });
-        // add the copied nodes back in
-        var nodesArray = ko.nativeTemplateEngine.instance['renderTemplateSource'](new ko.templateSources.anonymousTemplate(element));
-        var endCommentNode = null, parent = element;
-        if (element.nodeType == 8)
-            endCommentNode = element.nextSibling, parent = element.parentNode;
-        for (var i = 0, j = nodesArray.length; i < j; i++)
-            parent.insertBefore(nodesArray[i], endCommentNode);
-        return nodesArray;
+        if (element.nodeType == 8) {    // if comment node, contents have been saved as a template
+            // add the copied nodes back in
+            var nodesArray = ko.nativeTemplateEngine.instance['renderTemplateSource'](new ko.templateSources.anonymousTemplate(element)),
+                endCommentNode = element.nextSibling,
+                parent = element.parentNode;
+            for (var i = 0, j = nodesArray.length; i < j; i++)
+                parent.insertBefore(nodesArray[i], endCommentNode);
+            return nodesArray;
+        } else {
+            return element.childNodes;
+        }
     };
     bindSwitchNodes = function(element, bindingContext, switchBindings, nodesArray) {
         // node loop logic copied from src/templating.js
@@ -132,7 +135,7 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
     },
 
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        var index = bindingContext.$switchIndex, 
+        var index = bindingContext.$switchIndex,
             isLast = (index === bindingContext.$switchSkipNextArray.length - 1),
             result, skipNext, noDefault;
 
@@ -144,7 +147,7 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor());
             if (value === bindingContext['$else']) {
                 // If value is the special object $else, the result depends on the other case values.
-                // If we're the last *case* item, the value must be true. $switchDefault will get 
+                // If we're the last *case* item, the value must be true. $switchDefault will get
                 // updated to *true* below, but that won't necessarily update us because it would
                 // require a recursive update.
                 result = bindingContext.$switchDefault() || isLast;
@@ -154,17 +157,17 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
                 noDefault = skipNext = result = checkFunction(value, bindingContext);
             }
         }
-        // Call template update() with calculated value for 'if'
+        // Call update() with calculated value
         ko.bindingHandlers[binding]['update'](element,
             makeValueAccessor(result), allBindingsAccessor, viewModel, bindingContext);
 
-        // Update the observable "skip next" value; if the value is changed, this will update the 
+        // Update the observable "skip next" value; if the value is changed, this will update the
         // subsequent case item.
         bindingContext.$switchSkipNextArray[index](skipNext);
 
         // Update $switchDefault to false if a non-default case item has matched.
         // Update it to true if we're the last item and none of items have matched.
-        // (Initially, every item will be the last, but it doesn't matter.) 
+        // (Initially, every item will be the last, but it doesn't matter.)
         if (noDefault)
             bindingContext.$switchDefault(false);
         else if (!skipNext && isLast)
