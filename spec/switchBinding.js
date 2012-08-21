@@ -52,7 +52,7 @@ describe('Binding: Switch/Case', {
         // initially matches case 1
         value_of(testNode.childNodes[2].style.display).should_be("none");
         value_of(testNode.childNodes[3].style.display).should_be("");
-        
+
         // change value so it matches case 2
         value(2);
         value_of(testNode.childNodes[2].style.display).should_be("");
@@ -215,5 +215,32 @@ describe('Binding: Switch/Case', {
         testNode.innerHTML = "<div data-bind='switch: 0'><div data-bind='case: 0'>Value is 0<div data-bind='case: 1'>Value is 1</div></div></div>";
         try { ko.applyBindings({}, testNode); } catch (ex) { threw = true; }
         value_of(threw).should_be(true);
+    },
+
+    'Should be able to use case.* if key.subkey plugin is included': function() {
+        if (ko.keySubkeyBinding) {
+            testNode.innerHTML = "xxx<!--ko switch: somevalue--><input data-bind='case.enable: [1,2]'/><input data-bind='casenot.enable: 3'/><!--/ko-->";
+            var value = ko.observable(1);
+            ko.applyBindings({ somevalue: value }, testNode);
+
+            // matches first case
+            value_of(!testNode.childNodes[2].disabled).should_be(true);
+            value_of(!testNode.childNodes[3].disabled).should_be(false);
+
+            // still matches first case
+            value(2);
+            value_of(!testNode.childNodes[2].disabled).should_be(true);
+            value_of(!testNode.childNodes[3].disabled).should_be(false);
+
+            // matches no cases
+            value(3);
+            value_of(!testNode.childNodes[2].disabled).should_be(false);
+            value_of(!testNode.childNodes[3].disabled).should_be(false);
+
+            // matches second case
+            value(4);
+            value_of(!testNode.childNodes[2].disabled).should_be(false);
+            value_of(!testNode.childNodes[3].disabled).should_be(true);
+        }
     }
 });

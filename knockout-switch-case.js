@@ -1,6 +1,7 @@
 // SWITCH/CASE binding for Knockout http://knockoutjs.com/
 // (c) Michael Best
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
+// Version 1.1.0
 
 (function() {
 // If used with the non-debug version, ko.virtualElements isn't exported
@@ -183,6 +184,15 @@ ko.virtualElements.allowedBindings['case'] = true;
 ko.bindingHandlers['casenot'] = makeCaseHandler('template', true);
 ko.bindingRewriteValidators['casenot'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['casenot'] = true;
+
+// Support dynamically creating new case binding when using key.subkey plugin
+function makeSubkeyHandler(baseKey, subKey, bindingKey) {
+    if (ko.virtualElements.allowedBindings[subKey])
+        ko.virtualElements.allowedBindings[bindingKey] = true;
+    return makeCaseHandler(subKey, baseKey === 'casenot');
+}
+ko.bindingHandlers['case']['makeSubkeyHandler'] = makeSubkeyHandler;
+ko.bindingHandlers['casenot']['makeSubkeyHandler'] = makeSubkeyHandler;
 
 ko.bindingHandlers['case.visible'] = makeCaseHandler('visible');
 ko.bindingHandlers['casenot.visible'] = makeCaseHandler('visible', true);
