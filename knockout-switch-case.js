@@ -1,7 +1,7 @@
 // SWITCH/CASE binding for Knockout http://knockoutjs.com/
 // (c) Michael Best
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
-// Version 1.2.0
+// Version 1.2.1
 
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -35,7 +35,7 @@ if (ko.virtualElements.firstChild) {
             nextInQueue = ko.virtualElements.nextSibling(node);
             switch (node.nodeType) {
             case 1: case 8:
-                var newContext = bindingContext['extend'](switchBindings);
+                var newContext = bindingContext.extend(switchBindings);
                 ko.applyBindings(newContext, node);
                 break;
             }
@@ -46,7 +46,7 @@ if (ko.virtualElements.firstChild) {
     initSwitchNodes = function(element) {
         if (element.nodeType == 8) {    // if comment node, contents have been saved as a template
             // add the copied nodes back in
-            var nodesArray = ko.nativeTemplateEngine.instance['renderTemplateSource'](new ko.templateSources.anonymousTemplate(element)),
+            var nodesArray = ko.nativeTemplateEngine.instance.renderTemplateSource(new ko.templateSources.anonymousTemplate(element)),
                 endCommentNode = element.nextSibling,
                 parent = element.parentNode;
             for (var i = 0, j = nodesArray.length; i < j; i++)
@@ -74,24 +74,26 @@ if (ko.virtualElements.firstChild) {
 }
 
 ko.bindingHandlers['switch'] = {
-    'flags': ko.bindingFlags.contentBind | ko.bindingFlags.canUseVirtual,
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+    flags: ko.bindingFlags.contentBind | ko.bindingFlags.canUseVirtual,
+    init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var nodesArray = initSwitchNodes(element);
         var value = ko.utils.unwrapObservable(valueAccessor()),
             switchSkipNextArray = [],
             switchBindings = {
+                // these properties are internal
                 $switchIndex: undefined,
                 $switchSkipNextArray: switchSkipNextArray,
                 $switchValueAccessor: valueAccessor,
                 $switchDefault: ko.observable(true),
-                '$default': defaultvalue,
-                '$else': defaultvalue,
-                '$value': value
+                // these properties are public
+                $default: defaultvalue,
+                $else: defaultvalue,
+                $value: value
             };
         // Each child element gets a new binding context so it can have it's own $switchIndex property.
         // The other properties will be shared since they're objects.
         bindSwitchNodes(element, bindingContext, switchBindings, nodesArray);
-        return { 'controlsDescendantBindings': true };
+        return { controlsDescendantBindings: true };
     }
 };
 ko.bindingRewriteValidators['switch'] = false; // Can't rewrite control flow bindings
@@ -118,7 +120,7 @@ function checkNotCase(value, bindingContext) {
 }
 
 function makeTemplateValueAccessor(ifValue) {
-    return function() { return { 'if': ifValue, 'templateEngine': ko.nativeTemplateEngine.instance } };
+    return function() { return { 'if': ifValue, templateEngine: ko.nativeTemplateEngine.instance } };
 }
 
 function makeOtherValueAccessor(ifValue) {
@@ -131,60 +133,60 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
     makeValueAccessor = makeValueAccessor || (binding == 'template' ?  makeTemplateValueAccessor : makeOtherValueAccessor);
 
     return {
-    // Inherit flags from the binding we're wrapping (but we don't want the contentSet from template)
-    'flags': ko.bindingHandlers[binding]['flags'] ^ ko.bindingFlags.contentSet,
+        // Inherit flags from the binding we're wrapping (but we don't want the contentSet from template)
+        flags: ko.bindingHandlers[binding].flags ^ ko.bindingFlags.contentSet,
 
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        if (!bindingContext.$switchSkipNextArray)
-            throw Error("case binding must only be used with a switch binding");
-        if (bindingContext.$switchIndex !== undefined)
-            throw Error("case binding cannot be nested");
-        // Initialize $switchIndex and push a new observable to $switchSkipNextArray
-        bindingContext.$switchIndex = bindingContext.$switchSkipNextArray.push(ko.observable(false)) - 1;
-        // Call init()
-        if (ko.bindingHandlers[binding]['init'])
-            return ko.bindingHandlers[binding]['init'](element, function(){ return {}; });
-    },
+        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            if (!bindingContext.$switchSkipNextArray)
+                throw Error("case binding must only be used with a switch binding");
+            if (bindingContext.$switchIndex !== undefined)
+                throw Error("case binding cannot be nested");
+            // Initialize $switchIndex and push a new observable to $switchSkipNextArray
+            bindingContext.$switchIndex = bindingContext.$switchSkipNextArray.push(ko.observable(false)) - 1;
+            // Call init()
+            if (ko.bindingHandlers[binding].init)
+                return ko.bindingHandlers[binding].init(element, function(){ return {}; });
+        },
 
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        var index = bindingContext.$switchIndex,
-            isLast = (index === bindingContext.$switchSkipNextArray.length - 1),
-            result, skipNext, noDefault;
+        update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            var index = bindingContext.$switchIndex,
+                isLast = (index === bindingContext.$switchSkipNextArray.length - 1),
+                result, skipNext, noDefault;
 
-        if (index && bindingContext.$switchSkipNextArray[index-1]()) {
-            // An earlier case binding matched: skip this one (and subsequent ones)
-            result = false;
-            skipNext = true;
-        } else {
-            var value = ko.utils.unwrapObservable(valueAccessor());
-            if (value === bindingContext['$else']) {
-                // If value is the special object $else, the result depends on the other case values.
-                // If we're the last *case* item, the value must be true. $switchDefault will get
-                // updated to *true* below, but that won't necessarily update us because it would
-                // require a recursive update.
-                result = bindingContext.$switchDefault() || isLast;
-                skipNext = false;
+            if (index && bindingContext.$switchSkipNextArray[index-1]()) {
+                // An earlier case binding matched: skip this one (and subsequent ones)
+                result = false;
+                skipNext = true;
             } else {
-                // If result is true, we will skip the subsequent cases (and any default cases)
-                noDefault = skipNext = result = checkFunction(value, bindingContext);
+                var value = ko.utils.unwrapObservable(valueAccessor());
+                if (value === bindingContext.$else) {
+                    // If value is the special object $else, the result depends on the other case values.
+                    // If we're the last *case* item, the value must be true. $switchDefault will get
+                    // updated to *true* below, but that won't necessarily update us because it would
+                    // require a recursive update.
+                    result = bindingContext.$switchDefault() || isLast;
+                    skipNext = false;
+                } else {
+                    // If result is true, we will skip the subsequent cases (and any default cases)
+                    noDefault = skipNext = result = checkFunction(value, bindingContext);
+                }
             }
+            // Call update() with calculated value
+            ko.bindingHandlers[binding].update(element,
+                makeValueAccessor(result), allBindingsAccessor, viewModel, bindingContext);
+
+            // Update the observable "skip next" value; if the value is changed, this will update the
+            // subsequent case item.
+            bindingContext.$switchSkipNextArray[index](skipNext);
+
+            // Update $switchDefault to false if a non-default case item has matched.
+            // Update it to true if we're the last item and none of items have matched.
+            // (Initially, every item will be the last, but it doesn't matter.)
+            if (noDefault)
+                bindingContext.$switchDefault(false);
+            else if (!skipNext && isLast)
+                bindingContext.$switchDefault(true);
         }
-        // Call update() with calculated value
-        ko.bindingHandlers[binding]['update'](element,
-            makeValueAccessor(result), allBindingsAccessor, viewModel, bindingContext);
-
-        // Update the observable "skip next" value; if the value is changed, this will update the
-        // subsequent case item.
-        bindingContext.$switchSkipNextArray[index](skipNext);
-
-        // Update $switchDefault to false if a non-default case item has matched.
-        // Update it to true if we're the last item and none of items have matched.
-        // (Initially, every item will be the last, but it doesn't matter.)
-        if (noDefault)
-            bindingContext.$switchDefault(false);
-        else if (!skipNext && isLast)
-            bindingContext.$switchDefault(true);
-    }
     };
 }
 
@@ -202,12 +204,12 @@ function makeSubkeyHandler(baseKey, subKey, bindingKey) {
         ko.virtualElements.allowedBindings[bindingKey] = true;
     return makeCaseHandler(subKey, baseKey === 'casenot');
 }
-ko.bindingHandlers['case']['makeSubkeyHandler'] = makeSubkeyHandler;
-ko.bindingHandlers['casenot']['makeSubkeyHandler'] = makeSubkeyHandler;
+ko.bindingHandlers['case'].makeSubkeyHandler = makeSubkeyHandler;
+ko.bindingHandlers['casenot'].makeSubkeyHandler = makeSubkeyHandler;
 
 ko.bindingHandlers['case.visible'] = makeCaseHandler('visible');
 ko.bindingHandlers['casenot.visible'] = makeCaseHandler('visible', true);
 
-ko.bindingHandlers['switch']['makeCaseHandler'] = makeCaseHandler;
+ko.bindingHandlers['switch'].makeCaseHandler = makeCaseHandler;
 
 }));
