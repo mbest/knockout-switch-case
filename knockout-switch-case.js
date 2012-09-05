@@ -1,9 +1,20 @@
 // SWITCH/CASE binding for Knockout http://knockoutjs.com/
 // (c) Michael Best
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
-// Version 1.1.0
+// Version 1.2.0
 
-(function() {
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['knockout'], factory);
+    } else {
+        // Browser globals
+        factory(root.ko);
+    }
+}(this, function(ko) {
+
+var undefined;
+
 // If used with the non-debug version, ko.virtualElements isn't exported
 if (!ko.virtualElements)
     ko.virtualElements = { allowedBindings: ko.allowedVirtualElementBindings };
@@ -199,4 +210,4 @@ ko.bindingHandlers['casenot.visible'] = makeCaseHandler('visible', true);
 
 ko.bindingHandlers['switch']['makeCaseHandler'] = makeCaseHandler;
 
-})();
+}));
