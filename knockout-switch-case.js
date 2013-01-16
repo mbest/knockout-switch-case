@@ -1,7 +1,7 @@
 // SWITCH/CASE binding for Knockout http://knockoutjs.com/
 // (c) Michael Best
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
-// Version 1.2.1
+// Version 1.2.2
 
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -74,7 +74,7 @@ if (ko.virtualElements.firstChild) {
 }
 
 ko.bindingHandlers['switch'] = {
-    flags: ko.bindingFlags.contentBind | ko.bindingFlags.canUseVirtual,
+    flags: ko.bindingFlags.contentBind | ko.bindingFlags.canUseVirtual | ko.bindingFlags.noValue,
     init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var nodesArray = initSwitchNodes(element);
         var value = ko.utils.unwrapObservable(valueAccessor()),
