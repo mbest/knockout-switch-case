@@ -1,7 +1,7 @@
 // SWITCH/CASE binding for Knockout http://knockoutjs.com/
 // (c) Michael Best
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
-// Version 1.2.2
+// Version 1.2.3
 
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -94,6 +94,9 @@ ko.bindingHandlers['switch'] = {
         // The other properties will be shared since they're objects.
         bindSwitchNodes(element, bindingContext, switchBindings, nodesArray);
         return { controlsDescendantBindings: true };
+    },
+    preprocess: function(value) {
+        return value || 'true';
     }
 };
 ko.bindingRewriteValidators['switch'] = false; // Can't rewrite control flow bindings

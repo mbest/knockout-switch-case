@@ -1,50 +1,60 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <title>JSSpec results</title>
-        <link rel="stylesheet" type="text/css" href="lib/JSSpec.css" />
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Knockout-switch-case test runner</title>
 
-        <script type="text/javascript" src="lib/diff_match_patch.js"></script>
-        <script type="text/javascript" src="lib/JSSpec.js"></script>
-        <script type="text/javascript">
-            JSSpec.DSL.Subject.prototype.should_be_one_of = function (expectedPossibilities) {
-                for (var i = 0; i < expectedPossibilities.length; i++) {
-                    var matcher = JSSpec.EqualityMatcher.createInstance(expectedPossibilities[i], this.target);
-                    if (matcher.matches())
-                        return;
+    <!-- jasmine -->
+    <link rel="shortcut icon" type="image/png" href="lib/jasmine_favicon.png"/>
+    <link rel="stylesheet" type="text/css" href="lib/jasmine.css"/>
+    <script type="text/javascript" src="lib/jasmine.js"></script>
+    <script type="text/javascript" src="lib/jasmine-html.js"></script>
+
+    <!-- jasmine extensions -->
+    <link rel="stylesheet" type="text/css" href="lib/jasmine.extensions.css" />
+    <script type="text/javascript" src="lib/jasmine.extensions.js"></script>
+
+    <!-- knockout -->
+    <script type="text/javascript" src="lib/knockout-3.0.0beta.js"></script>
+    <script type="text/javascript" src="lib/knockout-key.subkey.js"></script>
+
+    <!-- source files -->
+    <script type="text/javascript" src="../knockout-switch-case.js"></script>
+
+    <!-- spec files -->
+    <script type="text/javascript" src="switchBinding.js"></script>
+
+    <script type="text/javascript">
+        (function() {
+            var jasmineEnv = jasmine.getEnv();
+            jasmineEnv.updateInterval = 1000;
+
+            var htmlReporter = new jasmine.HtmlReporter();
+
+            jasmineEnv.addReporter(htmlReporter);
+
+            jasmineEnv.specFilter = function(spec) {
+                return htmlReporter.specFilter(spec);
+            };
+
+            var currentWindowOnload = window.onload;
+
+            window.onload = function() {
+                if (currentWindowOnload) {
+                    currentWindowOnload();
                 }
-                JSSpec._assertionFailure = { message: "Should be one of the values: " + expectedPossibilities.toString() + "; was: " + this.target.toString() };
-                throw JSSpec._assertionFailure;
-            };
-            JSSpec.DSL.Subject.prototype.should_contain = function (expected) {
-                if (this.target.indexOf(expected) >= 0)
-                    return;
-                JSSpec._assertionFailure = { message: "Should contain: " + expected.toString() + "; was: " + this.target.toString() };
-                throw JSSpec._assertionFailure;
-            };
-            JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
-                var cleanedHtml = this.target.innerHTML.toLowerCase().replace(/\r\n/g, "");
-                // IE < 9 strips whitespace immediately following comment nodes. Normalize by doing the same on all browsers.
-                cleanedHtml = cleanedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
-                expectedHtml = expectedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
-                // Also remove __ko__ expando properties (for DOM data) - most browsers hide these anyway but IE < 9 includes them in innerHTML
-                cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"(ko\d+|null)\"/g, "");
-                JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
-            };
-            JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
-            	var actualText = 'textContent' in this.target ? this.target.textContent : this.target.innerText;
-                var cleanedActualText = actualText.replace(/\r\n/g, "\n");
-                JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
+                execJasmine();
             };
 
-        </script>
-        <script type="text/javascript" src="lib/knockout-2.1.0.js"></script>
-        <script type="text/javascript" src="https://raw.github.com/mbest/knockout-key.subkey/master/knockout-key.subkey.js"></script>
-        <script type="text/javascript" src="../knockout-switch-case.js"></script>
+            function execJasmine() {
+                jasmineEnv.execute();
+            }
 
-        <script type="text/javascript" src="switchBinding.js"></script>
-    </head>
-    <body>
-        <div style="display:none;"><p>A</p><p>B</p></div>
-    </body>
+        })();
+    </script>
+
+</head>
+
+<body>
+</body>
 </html>
