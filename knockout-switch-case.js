@@ -26,24 +26,22 @@ var defaultvalue = {};
 ko.bindingHandlers['switch'] = {
     flags: bindingFlags.contentBind | bindingFlags.canUseVirtual | bindingFlags.noValue,
     init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-        var value = ko.utils.unwrapObservable(valueAccessor()),
-            switchSkipNextArray = [],
+        var switchSkipNextArray = [],
             switchBindings = {
                 // these properties are internal
-                $switchIndex: undefined,
                 $switchSkipNextArray: switchSkipNextArray,
                 $switchValueAccessor: valueAccessor,
                 $switchDefault: ko.observable(true),
                 // these properties are public
                 $default: defaultvalue,
-                $else: defaultvalue,
-                $value: value
+                $else: defaultvalue
             },
             contexts = [];
 
         // Update $value in each context when it changes
         ko.computed(function() {
             var value = ko.utils.unwrapObservable(valueAccessor());
+            switchBindings.$value = value;
             ko.utils.arrayForEach(contexts, function(context) {
                 context.$value = value;
             });
@@ -57,6 +55,8 @@ ko.bindingHandlers['switch'] = {
             switch (node.nodeType) {
             case 1: case 8:
                 var newContext = bindingContext.extend(switchBindings);
+                // Set initial value of context.$switchIndex to undefined
+                newContext.$switchIndex = undefined;
                 ko.applyBindings(newContext, node);
                 contexts.push(newContext);
                 break;

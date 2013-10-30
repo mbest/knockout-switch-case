@@ -218,6 +218,20 @@ describe('Binding: Switch/Case', function() {
             // Switch binding defaults to "true", so the first truthy value matches
             expect(testNode).toContainText("Value matched");
         });
+
+        it('Should work with observable view models in Knockout 3.x', function() {
+            testNode.innerHTML = "<div data-bind='switch: somevalue'><div data-bind='case: 1'>Value is 1</div><div data-bind='case: $value < 5'>Value is less than 5</div></div>";
+            var value = ko.observable(4), vm = ko.observable({ somevalue: value });
+            ko.applyBindings(vm, testNode);
+            // initially matches second case
+            expect(testNode).toContainText("Value is less than 5");
+            // change value so it matches first case (using direct observable)
+            value(1);
+            expect(testNode).toContainText("Value is 1");
+            // change value so it matches no cases (using viewmodel observable)
+            vm({ somevalue: 10 });
+            expect(testNode).toContainText("");
+        });
     }
 
     if (ko.keySubkeyBinding || ko.punches) {
