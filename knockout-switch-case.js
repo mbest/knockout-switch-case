@@ -1,7 +1,7 @@
 // SWITCH/CASE binding for Knockout http://knockoutjs.com/
 // (c) Michael Best
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
-// Version 1.2.3
+// Version 2.0.0
 
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
