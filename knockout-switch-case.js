@@ -25,7 +25,7 @@ var bindingRewriteValidators = ko.bindingRewriteValidators || ko.jsonExpressionR
 var defaultvalue = {};
 ko.bindingHandlers['switch'] = {
     flags: bindingFlags.contentBind | bindingFlags.canUseVirtual | bindingFlags.noValue,
-    init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+    init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
         var value = ko.utils.unwrapObservable(valueAccessor()),
             switchSkipNextArray = [],
             switchBindings = {
@@ -38,8 +38,18 @@ ko.bindingHandlers['switch'] = {
                 $default: defaultvalue,
                 $else: defaultvalue,
                 $value: value
-            };
-        // Each child element gets a new binding context so it can have it's own $switchIndex property.
+            },
+            contexts = [];
+
+        // Update $value in each context when it changes
+        ko.computed(function() {
+            var value = ko.utils.unwrapObservable(valueAccessor());
+            ko.utils.arrayForEach(contexts, function(context) {
+                context.$value = value;
+            });
+        }, null, {disposeWhenNodeIsRemoved: element});
+
+        // Each child element gets a new binding context so it can set its own $switchIndex property.
         // The other properties will be shared since they're objects.
         var node, nextInQueue = virtualElements.firstChild(element);
         while (node = nextInQueue) {
@@ -48,6 +58,7 @@ ko.bindingHandlers['switch'] = {
             case 1: case 8:
                 var newContext = bindingContext.extend(switchBindings);
                 ko.applyBindings(newContext, node);
+                contexts.push(newContext);
                 break;
             }
         }
@@ -94,7 +105,7 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
         // Inherit flags from the binding we're wrapping
         flags: ko.bindingHandlers[binding].flags,
 
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             if (!bindingContext.$switchSkipNextArray)
                 throw Error("case binding must only be used with a switch binding");
             if (bindingContext.$switchIndex !== undefined)
@@ -103,10 +114,10 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
             bindingContext.$switchIndex = bindingContext.$switchSkipNextArray.push(ko.observable(false)) - 1;
             // Call init()
             if (ko.bindingHandlers[binding].init)
-                return ko.bindingHandlers[binding].init(element, function(){ return {}; }, allBindingsAccessor, viewModel, bindingContext);
+                return ko.bindingHandlers[binding].init(element, function(){ return {}; }, allBindings, viewModel, bindingContext);
         },
 
-        update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             var index = bindingContext.$switchIndex,
                 isLast = (index === bindingContext.$switchSkipNextArray.length - 1),
                 result, skipNext, noDefault;
@@ -131,7 +142,7 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
             }
             // Call update() with calculated value
             ko.bindingHandlers[binding].update(element,
-                makeValueAccessor(result), allBindingsAccessor, viewModel, bindingContext);
+                makeValueAccessor(result), allBindings, viewModel, bindingContext);
 
             // Update the observable "skip next" value; if the value is changed, this will update the
             // subsequent case item.
@@ -162,8 +173,15 @@ function makeSubkeyHandler(baseKey, subKey, bindingKey) {
         virtualElements.allowedBindings[bindingKey] = true;
     return makeCaseHandler(subKey, baseKey === 'casenot');
 }
+function getNamespacedHandler(bindingName, namespace, bindingKey) {
+    return makeSubkeyHandler(namespace, bindingName, bindingKey);
+}
+// Compatibility with Key.subkey plugin
 ko.bindingHandlers['case'].makeSubkeyHandler = makeSubkeyHandler
 ko.bindingHandlers['casenot'].makeSubkeyHandler = makeSubkeyHandler;
+// Compatibility with Punches plugin
+ko.bindingHandlers['case'].getNamespacedHandler = getNamespacedHandler;
+ko.bindingHandlers['casenot'].getNamespacedHandler = getNamespacedHandler;
 
 ko.bindingHandlers['case.visible'] = makeCaseHandler('visible');
 ko.bindingHandlers['casenot.visible'] = makeCaseHandler('visible', true /*isNot*/);

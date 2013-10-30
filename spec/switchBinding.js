@@ -98,6 +98,9 @@ describe('Binding: Switch/Case', function() {
         // change value so it matches first case
         value(1);
         expect(testNode).toContainText("xxxValue is 1");
+        // change value so it matches none of the cases
+        value(10);
+        expect(testNode).toContainText("xxx");
     });
 
     it('Should display first true case block with default case (using $else)', function() {
