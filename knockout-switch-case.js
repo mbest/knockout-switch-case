@@ -15,68 +15,17 @@
 
 var undefined;
 
-// If used with the non-debug version, ko.virtualElements isn't exported
 if (!ko.virtualElements)
-    ko.virtualElements = { allowedBindings: ko.allowedVirtualElementBindings };
-if (!ko.nativeTemplateEngine.instance)
-    ko.nativeTemplateEngine.instance = new ko.nativeTemplateEngine();
-if (!ko.bindingRewriteValidators)
-    ko.bindingRewriteValidators = ko.jsonExpressionRewriting.bindingRewriteValidators;
-if (!ko.bindingFlags)
-    ko.bindingFlags = {};
+    throw Error('Switch-case requires at least Knockout 2.1');
 
-var defaultvalue = {}, initSwitchNodes, bindSwitchNodes;
-if (ko.virtualElements.firstChild) {
-    // Code for Knockout 2.1+
-    initSwitchNodes = function() {};
-    bindSwitchNodes = function(element, bindingContext, switchBindings) {
-        var node, nextInQueue = ko.virtualElements.firstChild(element);
-        while (node = nextInQueue) {
-            nextInQueue = ko.virtualElements.nextSibling(node);
-            switch (node.nodeType) {
-            case 1: case 8:
-                var newContext = bindingContext.extend(switchBindings);
-                ko.applyBindings(newContext, node);
-                break;
-            }
-        }
-    };
-} else {
-    // Code for Knockout 2.0
-    initSwitchNodes = function(element) {
-        if (element.nodeType == 8) {    // if comment node, contents have been saved as a template
-            // add the copied nodes back in
-            var nodesArray = ko.nativeTemplateEngine.instance.renderTemplateSource(new ko.templateSources.anonymousTemplate(element)),
-                endCommentNode = element.nextSibling,
-                parent = element.parentNode;
-            for (var i = 0, j = nodesArray.length; i < j; i++)
-                parent.insertBefore(nodesArray[i], endCommentNode);
-            return nodesArray;
-        } else {
-            return element.childNodes;
-        }
-    };
-    bindSwitchNodes = function(element, bindingContext, switchBindings, nodesArray) {
-        // node loop logic copied from src/templating.js
-        var parent = nodesArray.length ? nodesArray[0].parentNode : null;
-        for (var i = 0, n = nodesArray.length; i < n; i++) {
-            var node = nodesArray[i];
-            if (node.parentNode !== parent) // Skip anything that has been removed during binding
-                continue;
-            switch (node.nodeType) {
-            case 1: case 8:
-                var newContext = ko.utils.extend(ko.utils.extend(new bindingContext.constructor(), bindingContext), switchBindings);
-                ko.applyBindings(newContext, node);
-                break;
-            }
-        }
-    };
-}
+var virtualElements = ko.virtualElements;
+var bindingFlags = ko.bindingFlags || {};
+var bindingRewriteValidators = ko.bindingRewriteValidators || ko.jsonExpressionRewriting.bindingRewriteValidators;
 
+var defaultvalue = {};
 ko.bindingHandlers['switch'] = {
-    flags: ko.bindingFlags.contentBind | ko.bindingFlags.canUseVirtual | ko.bindingFlags.noValue,
+    flags: bindingFlags.contentBind | bindingFlags.canUseVirtual | bindingFlags.noValue,
     init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        var nodesArray = initSwitchNodes(element);
         var value = ko.utils.unwrapObservable(valueAccessor()),
             switchSkipNextArray = [],
             switchBindings = {
@@ -92,15 +41,25 @@ ko.bindingHandlers['switch'] = {
             };
         // Each child element gets a new binding context so it can have it's own $switchIndex property.
         // The other properties will be shared since they're objects.
-        bindSwitchNodes(element, bindingContext, switchBindings, nodesArray);
+        var node, nextInQueue = virtualElements.firstChild(element);
+        while (node = nextInQueue) {
+            nextInQueue = virtualElements.nextSibling(node);
+            switch (node.nodeType) {
+            case 1: case 8:
+                var newContext = bindingContext.extend(switchBindings);
+                ko.applyBindings(newContext, node);
+                break;
+            }
+        }
+
         return { controlsDescendantBindings: true };
     },
     preprocess: function(value) {
         return value || 'true';
     }
 };
-ko.bindingRewriteValidators['switch'] = false; // Can't rewrite control flow bindings
-ko.virtualElements.allowedBindings['switch'] = true;
+bindingRewriteValidators['switch'] = false; // Can't rewrite control flow bindings
+virtualElements.allowedBindings['switch'] = true;
 
 function checkCase(value, bindingContext) {
     // Check value and determine result:
@@ -122,22 +81,18 @@ function checkNotCase(value, bindingContext) {
     return !checkCase(value, bindingContext);
 }
 
-function makeTemplateValueAccessor(ifValue) {
-    return function() { return { 'if': ifValue, templateEngine: ko.nativeTemplateEngine.instance } };
-}
-
-function makeOtherValueAccessor(ifValue) {
+function defaultMakeValueAccessor(ifValue) {
     return function() { return ifValue };
 }
 
 function makeCaseHandler(binding, isNot, makeValueAccessor) {
     var checkFunction = isNot ? checkNotCase : checkCase;
-    binding = binding || 'template';
-    makeValueAccessor = makeValueAccessor || (binding == 'template' ?  makeTemplateValueAccessor : makeOtherValueAccessor);
+    binding || (binding = 'if');
+    makeValueAccessor || (makeValueAccessor = defaultMakeValueAccessor);
 
     return {
-        // Inherit flags from the binding we're wrapping (but we don't want the contentSet from template)
-        flags: ko.bindingHandlers[binding].flags ^ ko.bindingFlags.contentSet,
+        // Inherit flags from the binding we're wrapping
+        flags: ko.bindingHandlers[binding].flags,
 
         init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             if (!bindingContext.$switchSkipNextArray)
@@ -148,7 +103,7 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
             bindingContext.$switchIndex = bindingContext.$switchSkipNextArray.push(ko.observable(false)) - 1;
             // Call init()
             if (ko.bindingHandlers[binding].init)
-                return ko.bindingHandlers[binding].init(element, function(){ return {}; });
+                return ko.bindingHandlers[binding].init(element, function(){ return {}; }, allBindingsAccessor, viewModel, bindingContext);
         },
 
         update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
@@ -193,25 +148,25 @@ function makeCaseHandler(binding, isNot, makeValueAccessor) {
     };
 }
 
-ko.bindingHandlers['case'] = makeCaseHandler('template');
-ko.bindingRewriteValidators['case'] = false; // Can't rewrite control flow bindings
-ko.virtualElements.allowedBindings['case'] = true;
+ko.bindingHandlers['case'] = makeCaseHandler('if');
+bindingRewriteValidators['case'] = false; // Can't rewrite control flow bindings
+virtualElements.allowedBindings['case'] = true;
 
-ko.bindingHandlers['casenot'] = makeCaseHandler('template', true);
-ko.bindingRewriteValidators['casenot'] = false; // Can't rewrite control flow bindings
-ko.virtualElements.allowedBindings['casenot'] = true;
+ko.bindingHandlers['casenot'] = makeCaseHandler('if', true /*isNot*/);
+bindingRewriteValidators['casenot'] = false; // Can't rewrite control flow bindings
+virtualElements.allowedBindings['casenot'] = true;
 
 // Support dynamically creating new case binding when using key.subkey plugin
 function makeSubkeyHandler(baseKey, subKey, bindingKey) {
-    if (ko.virtualElements.allowedBindings[subKey])
-        ko.virtualElements.allowedBindings[bindingKey] = true;
+    if (virtualElements.allowedBindings[subKey])
+        virtualElements.allowedBindings[bindingKey] = true;
     return makeCaseHandler(subKey, baseKey === 'casenot');
 }
-ko.bindingHandlers['case'].makeSubkeyHandler = makeSubkeyHandler;
+ko.bindingHandlers['case'].makeSubkeyHandler = makeSubkeyHandler
 ko.bindingHandlers['casenot'].makeSubkeyHandler = makeSubkeyHandler;
 
 ko.bindingHandlers['case.visible'] = makeCaseHandler('visible');
-ko.bindingHandlers['casenot.visible'] = makeCaseHandler('visible', true);
+ko.bindingHandlers['casenot.visible'] = makeCaseHandler('visible', true /*isNot*/);
 
 ko.bindingHandlers['switch'].makeCaseHandler = makeCaseHandler;
 

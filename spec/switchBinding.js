@@ -208,12 +208,14 @@ describe('Binding: Switch/Case', function() {
         expect(threw).toEqual(true);
     });
 
-    it('Should support switch binding without a value in Knockout 3.x', function() {
-        testNode.innerHTML = "<div data-bind='switch'><!-- ko case: 'abc' -->Value matched<!-- /ko --><!-- ko case: $else -->Value didn't match<!-- /ko --></div>";
-        ko.applyBindings({}, testNode);
-        // Switch binding defaults to "true", so the first truthy value matches
-        expect(testNode).toContainText("Value matched");
-    });
+    if (ko.version >= "3.0.0") {
+        it('Should support switch binding without a value in Knockout 3.x', function() {
+            testNode.innerHTML = "<div data-bind='switch'><!-- ko case: 'abc' -->Value matched<!-- /ko --><!-- ko case: $else -->Value didn't match<!-- /ko --></div>";
+            ko.applyBindings({}, testNode);
+            // Switch binding defaults to "true", so the first truthy value matches
+            expect(testNode).toContainText("Value matched");
+        });
+    }
 
     if (ko.keySubkeyBinding || ko.punches) {
         it('Should be able to use case.* if plugin is included', function() {
