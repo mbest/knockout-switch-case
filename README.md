@@ -76,8 +76,30 @@ This example demonstrates item 2 (also see the second example above):
 
 ```html
 <!-- ko switch: isReady -->
-    <p data-bind="case: true">You are ready!</p>
-    <p data-bind="case: false">You are not ready!</p>
+    <div data-bind="case: true">You are ready!</div>
+    <div data-bind="case: false">You are not ready!</div>
+<!-- /ko -->
+```
+
+### Controlling visibility instead of inclusion
+
+You can use the `case.visible` and `casenot.visible` bindings to conditionally show an element. For example:
+
+```html
+<!-- ko switch: true -->
+    <p data-bind="case.visible: isReady">You are ready!</p>
+    <p data-bind="case.visible: $elese">You are not ready!</p>
+<!-- /ko -->
+```
+
+### Switch shortcut when using Knockout 3.x
+
+When using Knockout 3.0+, you do not need to include the `true` value for the `switch` binding. For example:
+
+```html
+<!-- ko switch -->
+    <!-- ko case: 'abc' -->Value matched<!-- /ko -->
+    <!-- ko case: $else -->Value didn't match<!-- /ko -->
 <!-- /ko -->
 ```
 
@@ -85,12 +107,10 @@ This example demonstrates item 2 (also see the second example above):
 
 `ko.bindingHandlers.switch.makeCaseHandler` can be used to create new bindings that control any UI aspect. It returns a new binding handler object that you should assign to a `ko.bindingHandlers` property. It takes three parameters:
 
-* `binding` This is the name of the binding to wrap (`case` wraps the `template` binding, for example).
+* `binding` This is the name of the binding to wrap (`case` wraps the `if` binding, for example).
 * `isNot` (optional) If set to *true*, the new binding will reverse the result of the value matching (like `casenot`).
 * `makeValueAccessor` (optional) If the wrapped binding needs the value specified in a certain format, you can provide a function that accepts a `value` parameter and returns a `valueAccessor` function. The default looks like this:
 `function (value) { return function() { return value } }`
-
-Included with the plugin are `case.visible` and `casenot.visible` bindings, which wrap the `visible` binding (directly and reversed, respectively).
 
 License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
