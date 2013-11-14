@@ -88,7 +88,7 @@ You can use the `case.visible` and `casenot.visible` bindings to conditionally s
 ```html
 <!-- ko switch: true -->
     <p data-bind="case.visible: isReady">You are ready!</p>
-    <p data-bind="case.visible: $elese">You are not ready!</p>
+    <p data-bind="case.visible: $else">You are not ready!</p>
 <!-- /ko -->
 ```
 
