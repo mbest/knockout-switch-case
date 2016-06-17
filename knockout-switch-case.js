@@ -9,6 +9,8 @@
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['knockout'], factory);
+    } else if (typeof exports === 'object') {
+        module.exports = factory(require('knockout'));
     } else {
         // Browser globals
         factory(root.ko);
