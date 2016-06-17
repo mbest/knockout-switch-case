@@ -1,0 +1,15 @@
+{
+  "name": "knockout-switch-case",
+  "version": "2.1.0",
+  "description": "Knockout includes only the if and ifnot bindings for control flow. The switch and case bindings provide a flexible and powerful control flow mechanism that can simplify your code.",
+  "main": "knockout-switch-case.min.js",
+  "peerDependencies": {
+    "knockout": ">=3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/krnlde/knockout-switch-case.git"
+  },
+  "author": "@mbest",
+  "license": "MIT"
+}
