@@ -86,13 +86,9 @@
 
     get controlsDescendants () { return true }
 
-    get bindingComplete () {
-      /* overload where binding is asynchronous. See e.g. Component binding */
-    }
-
     static get allowVirtualElements () { return true }
 
-    preprocess (value) {
+    static preprocess (value) {
       return value || 'true'
     }
   }
